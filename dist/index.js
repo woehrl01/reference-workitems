@@ -38,7 +38,7 @@ async function run() {
         if (!github_1.context.payload.pull_request) {
             return;
         }
-        const token = core.getInput('token');
+        const token = core.getInput('github-token');
         const github = (0, github_1.getOctokit)(token);
         const prTitle = github_1.context.payload.pull_request.title;
         const bodyIssues = await readAllIssues(github_1.context.payload.pull_request.body || '');

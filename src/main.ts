@@ -9,7 +9,7 @@ async function run(): Promise<void> {
       return
     }
 
-    const token: string = core.getInput('token')
+    const token: string = core.getInput('github-token')
 
     const github = getOctokit(token)
 
