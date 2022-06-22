@@ -65,7 +65,7 @@ async function run() {
                 core.debug(`Found issue ${issue} in commit message`);
             }
         }
-        const newTitle = replaceIssueNumbers(prTitle, bodyIssues);
+        const newTitle = await replaceIssueNumbers(prTitle, bodyIssues);
         core.debug(`New title: ${newTitle}`);
     }
     catch (error) {

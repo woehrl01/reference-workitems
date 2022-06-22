@@ -46,7 +46,7 @@ async function run(): Promise<void> {
       }
     }
 
-    const newTitle = replaceIssueNumbers(prTitle, bodyIssues)
+    const newTitle = await replaceIssueNumbers(prTitle, bodyIssues)
     core.debug(`New title: ${newTitle}`)
   } catch (error) {
     if (error instanceof Error) core.setFailed(error.message)
