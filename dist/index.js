@@ -42,7 +42,8 @@ async function run() {
         const github = (0, github_1.getOctokit)(token);
         const bodyIssues = await extractAllIssuesFromBody();
         const allCommmitIssues = await extractAllIssuesFromCommits(github);
-        const allIssues = [...bodyIssues, ...allCommmitIssues];
+        const allDependencIssues = await extractAllDependencyIssues(github);
+        const allIssues = [...bodyIssues, ...allCommmitIssues, ...allDependencIssues];
         const prTitle = github_1.context.payload.pull_request.title;
         const newTitle = await replaceIssueNumbers(prTitle, allIssues);
         core.debug(`New title: ${newTitle}`);
@@ -82,6 +83,20 @@ async function extractAllIssuesFromBody() {
     }
     return bodyIssues;
 }
+async function extractAllDependencyIssues(github) {
+    if (!github_1.context.payload.pull_request) {
+        return [];
+    }
+    const files = await github.rest.pulls.listFiles({
+        owner: github_1.context.repo.owner,
+        repo: github_1.context.repo.repo,
+        pull_number: github_1.context.payload.pull_request.number
+    });
+    for (const file of files.data) {
+        core.debug(`Found file ${file.filename} changed in PR`);
+    }
+    return [];
+}
 async function readAllIssues(body) {
     const matches = body.match(regexMatchIssue);
     if (!matches) {
@@ -93,7 +108,7 @@ async function replaceIssueNumbers(prTitle, issues) {
     if (!issues.length) {
         return prTitle;
     }
-    const titleWithoutIssues = prTitle.replace(/\(\)/, '');
+    const titleWithoutIssues = prTitle.replace(/\(\)/, ''); //todo: fix this replacement
     const issueText = [...new Set(issues)].map(issue => `${issue}`).join(', ');
     return `${titleWithoutIssues} (${issueText})`;
 }

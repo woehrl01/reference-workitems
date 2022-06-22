@@ -16,7 +16,9 @@ async function run(): Promise<void> {
     const bodyIssues = await extractAllIssuesFromBody()
     const allCommmitIssues = await extractAllIssuesFromCommits(github)
 
-    const allIssues = [...bodyIssues, ...allCommmitIssues]
+    const allDependencIssues = await extractAllDependencyIssues(github)
+
+    const allIssues = [...bodyIssues, ...allCommmitIssues, ...allDependencIssues]
 
     const prTitle = context.payload.pull_request.title
     const newTitle = await replaceIssueNumbers(prTitle, allIssues)
@@ -62,6 +64,24 @@ async function extractAllIssuesFromBody(): Promise<string[]> {
   return bodyIssues
 }
 
+async function extractAllDependencyIssues(github: InstanceType<typeof GitHub>): Promise<string[]> {
+  if (!context.payload.pull_request) {
+    return []
+  }
+
+  const files = await github.rest.pulls.listFiles({
+    owner: context.repo.owner,
+    repo: context.repo.repo,
+    pull_number: context.payload.pull_request.number
+  })
+
+  for (const file of files.data) {
+    core.debug(`Found file ${file.filename} changed in PR`)
+  }
+
+  return []
+}
+
 async function readAllIssues(body: string): Promise<string[]> {
   const matches = body.match(regexMatchIssue)
 
@@ -81,11 +101,15 @@ async function replaceIssueNumbers(
     return prTitle
   }
 
-  const titleWithoutIssues = prTitle.replace(/\(\)/, '')
+  const titleWithoutIssues = prTitle.replace(/\(\)/, '') //todo: fix this replacement
 
   const issueText = [...new Set(issues)].map(issue => `${issue}`).join(', ')
 
   return `${titleWithoutIssues} (${issueText})`
 }
 
+
+
 run()
+
+
