@@ -1,7 +1,7 @@
 import * as core from '@actions/core'
 import { context, getOctokit } from '@actions/github'
 
-const regexMatchIssue = /(AB#[0-9]+)/
+const regexMatchIssue = /(AB#[0-9]+)/g
 
 async function run(): Promise<void> {
   try {

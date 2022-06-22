@@ -32,7 +32,7 @@ var __importStar = (this && this.__importStar) || function (mod) {
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 const core = __importStar(__nccwpck_require__(2186));
 const github_1 = __nccwpck_require__(5438);
-const regexMatchIssue = /(AB#[0-9]+)/;
+const regexMatchIssue = /(AB#[0-9]+)/g;
 async function run() {
     try {
         if (!github_1.context.payload.pull_request) {
