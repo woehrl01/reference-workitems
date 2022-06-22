@@ -40,40 +40,47 @@ async function run() {
         }
         const token = core.getInput('github-token');
         const github = (0, github_1.getOctokit)(token);
+        const bodyIssues = await extractAllIssuesFromBody();
+        const allCommmitIssues = await extractAllIssuesFromCommits(github);
+        const allIssues = [...bodyIssues, ...allCommmitIssues];
         const prTitle = github_1.context.payload.pull_request.title;
-        const bodyIssues = await readAllIssues(github_1.context.payload.pull_request.body || '');
-        const commits = await github.rest.pulls.listCommits({
-            owner: github_1.context.repo.owner,
-            repo: github_1.context.repo.repo,
-            pull_number: github_1.context.payload.pull_request.number
-        });
-        /*const { data: diff } = await github.rest.pulls.get({
-          owner: context.repo.owner,
-          repo: context.repo.repo,
-          pull_number: context.payload.pull_request.number,
-          mediaType: {
-            format: "patch",
-          },
-        })*/
-        for (const issue of bodyIssues) {
-            core.debug(`Found issue ${issue} in body`);
-        }
-        const allCommmitIssues = [];
-        for (const commit of commits.data) {
-            const commitMessage = commit.commit.message;
-            const commitIssues = await readAllIssues(commitMessage || '');
-            for (const issue of commitIssues) {
-                allCommmitIssues.push(issue);
-                core.debug(`Found issue ${issue} in commit message`);
-            }
-        }
-        const newTitle = await replaceIssueNumbers(prTitle, [...new Set([...bodyIssues, ...allCommmitIssues])]);
+        const newTitle = await replaceIssueNumbers(prTitle, allIssues);
         core.debug(`New title: ${newTitle}`);
     }
     catch (error) {
         if (error instanceof Error)
             core.setFailed(error.message);
     }
+}
+async function extractAllIssuesFromCommits(github) {
+    if (!github_1.context.payload.pull_request) {
+        return [];
+    }
+    const commits = await github.rest.pulls.listCommits({
+        owner: github_1.context.repo.owner,
+        repo: github_1.context.repo.repo,
+        pull_number: github_1.context.payload.pull_request.number
+    });
+    const allCommmitIssues = [];
+    for (const commit of commits.data) {
+        const commitMessage = commit.commit.message;
+        const commitIssues = await readAllIssues(commitMessage || '');
+        for (const issue of commitIssues) {
+            allCommmitIssues.push(issue);
+            core.debug(`Found issue ${issue} in commit message`);
+        }
+    }
+    return allCommmitIssues;
+}
+async function extractAllIssuesFromBody() {
+    if (!github_1.context.payload.pull_request) {
+        return [];
+    }
+    const bodyIssues = await readAllIssues(github_1.context.payload.pull_request.body || '');
+    for (const issue of bodyIssues) {
+        core.debug(`Found issue ${issue} in body`);
+    }
+    return bodyIssues;
 }
 async function readAllIssues(body) {
     const matches = body.match(regexMatchIssue);
@@ -87,7 +94,7 @@ async function replaceIssueNumbers(prTitle, issues) {
         return prTitle;
     }
     const titleWithoutIssues = prTitle.replace(/\(\)/, '');
-    const issueText = issues.map(issue => `${issue}`).join(', ');
+    const issueText = [...new Set(issues)].map(issue => `${issue}`).join(', ');
     return `${titleWithoutIssues} (${issueText})`;
 }
 run();
