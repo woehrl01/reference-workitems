@@ -87,9 +87,10 @@ async function extractAllDependencyIssues(github) {
     if (!github_1.context.payload.pull_request) {
         return [];
     }
-    const base = github_1.context.payload.pull_request.base.ref;
-    const head = github_1.context.payload.pull_request.head.ref;
-    core.debug(`Base branch: ${base}`);
+    const base = github_1.context.payload.pull_request.base.sha;
+    const head = github_1.context.payload.pull_request.head.sha;
+    core.debug(`Base sha: ${base}`);
+    core.debug(`Head sha: ${head}`);
     const files = await github.rest.pulls.listFiles({
         owner: github_1.context.repo.owner,
         repo: github_1.context.repo.repo,
@@ -98,7 +99,7 @@ async function extractAllDependencyIssues(github) {
     for (const file of files.data) {
         core.debug(`Found file ${file.filename} changed in PR`);
         core.debug(`File content of PR: ${file.raw_url}`);
-        core.debug(`File content of base: ${file.raw_url.replace(head, base)}`);
+        core.debug(`File content of base: ${file.raw_url.replace(head, base)}`); //todo: replace is not really good
     }
     return [];
 }
