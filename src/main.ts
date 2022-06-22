@@ -69,6 +69,11 @@ async function extractAllDependencyIssues(github: InstanceType<typeof GitHub>): 
     return []
   }
 
+  const base = context.payload.pull_request.base.ref
+  const head = context.payload.pull_request.head.ref
+
+  core.debug(`Base branch: ${base}`)
+
   const files = await github.rest.pulls.listFiles({
     owner: context.repo.owner,
     repo: context.repo.repo,
@@ -77,7 +82,10 @@ async function extractAllDependencyIssues(github: InstanceType<typeof GitHub>): 
 
   for (const file of files.data) {
     core.debug(`Found file ${file.filename} changed in PR`)
+    core.debug(`File content of PR: ${file.raw_url}`)
+    core.debug(`File content of base: ${file.raw_url.replace(head, base)}`)
   }
+
 
   return []
 }
