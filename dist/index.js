@@ -58,14 +58,16 @@ async function run() {
         for (const issue of bodyIssues) {
             core.debug(`Found issue ${issue} in body`);
         }
+        const allCommmitIssues = [];
         for (const commit of commits.data) {
             const commitMessage = commit.commit.message;
             const commitIssues = await readAllIssues(commitMessage || '');
             for (const issue of commitIssues) {
+                allCommmitIssues.push(issue);
                 core.debug(`Found issue ${issue} in commit message`);
             }
         }
-        const newTitle = await replaceIssueNumbers(prTitle, bodyIssues);
+        const newTitle = await replaceIssueNumbers(prTitle, [...new Set([...bodyIssues, ...allCommmitIssues])]);
         core.debug(`New title: ${newTitle}`);
     }
     catch (error) {
@@ -81,8 +83,12 @@ async function readAllIssues(body) {
     return matches.map(match => match.toString());
 }
 async function replaceIssueNumbers(prTitle, issues) {
+    if (!issues.length) {
+        return prTitle;
+    }
     const titleWithoutIssues = prTitle.replace(/\(\)/, '');
-    return titleWithoutIssues + issues.map(issue => `${issue}`).join(', ');
+    const issueText = issues.map(issue => `${issue}`).join(', ');
+    return `${titleWithoutIssues} (${issueText})`;
 }
 run();
 
