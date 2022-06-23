@@ -89,7 +89,7 @@ async function extractAllDependencyIssues(github: InstanceType<typeof GitHub>): 
     core.debug(`Found file ${file.filename} changed in PR`)
   }
 
-  for (const issue of await extractFromPackageManager(github, '7ea4bb220dd2319ca79391520584cac5e4daa635', '__tests__/testcases/prev-composer.lock', '7ea4bb220dd2319ca79391520584cac5e4daa635', '__tests__/testcases/after-composer.lock')) {
+  for (const issue of await extractFromPackageManager(github, head, '__tests__/testcases/prev-composer.lock', head, '__tests__/testcases/after-composer.lock')) {
     core.debug(`Found issue ${issue} in dependency`)
   }
 
