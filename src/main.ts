@@ -69,8 +69,8 @@ async function extractAllDependencyIssues(github: InstanceType<typeof GitHub>): 
     return []
   }
 
-  const base = context.payload.pull_request.base.sha
-  const head = context.payload.pull_request.head.sha
+  const base = context.payload.pull_request.base.ref
+  const head = context.payload.pull_request.head.ref
 
   core.debug(`Base sha: ${base}`)
   core.debug(`Head sha: ${head}`)
