@@ -102,14 +102,14 @@ async function extractAllDependencyIssues(github) {
         }
         core.debug(`Found file ${file.filename} changed in PR`);
     }
-    for (const issue of await extractFromPackageManager(github, '8fad6c5f92239947bcee8224ec8fcd4cc62e5e13', '__tests__/testcases/prev-composer.lock', '8fad6c5f92239947bcee8224ec8fcd4cc62e5e13', '__tests__/testcases/after-composer.lock')) {
+    for (const issue of await extractFromPackageManager(github, '7ea4bb220dd2319ca79391520584cac5e4daa635', '__tests__/testcases/prev-composer.lock', '7ea4bb220dd2319ca79391520584cac5e4daa635', '__tests__/testcases/after-composer.lock')) {
         core.debug(`Found issue ${issue} in dependency`);
     }
     return [];
 }
 async function extractFromPackageManager(github, baseSha, baseFileName, headSha, headFileName) {
-    core.debug(`Base sha: ${baseSha}`);
-    core.debug(`Head sha: ${headSha}`);
+    core.debug(`Base sha: ${baseSha} and file name: ${baseFileName}`);
+    core.debug(`Head sha: ${headSha} and file name: ${headFileName}`);
     let baseContent;
     try {
         const baseContentData = await github.rest.repos.getContent({

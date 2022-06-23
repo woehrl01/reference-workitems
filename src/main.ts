@@ -89,7 +89,7 @@ async function extractAllDependencyIssues(github: InstanceType<typeof GitHub>): 
     core.debug(`Found file ${file.filename} changed in PR`)
   }
 
-  for (const issue of await extractFromPackageManager(github, '8fad6c5f92239947bcee8224ec8fcd4cc62e5e13', '__tests__/testcases/prev-composer.lock', '8fad6c5f92239947bcee8224ec8fcd4cc62e5e13', '__tests__/testcases/after-composer.lock')) {
+  for (const issue of await extractFromPackageManager(github, '7ea4bb220dd2319ca79391520584cac5e4daa635', '__tests__/testcases/prev-composer.lock', '7ea4bb220dd2319ca79391520584cac5e4daa635', '__tests__/testcases/after-composer.lock')) {
     core.debug(`Found issue ${issue} in dependency`)
   }
 
@@ -111,8 +111,8 @@ type ComposerLock = {
 
 
 async function extractFromPackageManager(github: InstanceType<typeof GitHub>, baseSha: string, baseFileName: string, headSha: string, headFileName: string): Promise<string[]> {
-  core.debug(`Base sha: ${baseSha}`)
-  core.debug(`Head sha: ${headSha}`)
+  core.debug(`Base sha: ${baseSha} and file name: ${baseFileName}`)
+  core.debug(`Head sha: ${headSha} and file name: ${headFileName}`)
 
   let baseContent: ComposerLock
   try {
