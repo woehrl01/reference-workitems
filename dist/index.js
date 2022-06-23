@@ -87,8 +87,8 @@ async function extractAllDependencyIssues(github) {
     if (!github_1.context.payload.pull_request) {
         return [];
     }
-    const base = github_1.context.payload.pull_request.base.ref;
-    const head = github_1.context.payload.pull_request.head.ref;
+    const base = github_1.context.payload.pull_request.base.sha;
+    const head = github_1.context.payload.pull_request.head.sha;
     core.debug(`Base sha: ${base}`);
     core.debug(`Head sha: ${head}`);
     const files = await github.rest.pulls.listFiles({
