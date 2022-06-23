@@ -102,7 +102,7 @@ async function extractAllDependencyIssues(github) {
         }
         core.debug(`Found file ${file.filename} changed in PR`);
     }
-    for (const issue of await extractFromPackageManager(github, head, '__tests__/testcases/prev-composer.lock', head, '__tests__/testcases/after-composer.lock')) {
+    for (const issue of await extractFromPackageManager(github, head, './__tests__/testcases/prev-composer.lock', head, '__tests__/testcases/after-composer.lock')) {
         core.debug(`Found issue ${issue} in dependency`);
     }
     return [];
@@ -110,7 +110,7 @@ async function extractAllDependencyIssues(github) {
 async function extractFromPackageManager(github, baseSha, baseFileName, headSha, headFileName) {
     core.debug(`Base sha: ${baseSha} and file name: ${baseFileName}`);
     core.debug(`Head sha: ${headSha} and file name: ${headFileName}`);
-    let baseContent;
+    let baseContent = null;
     try {
         const baseContentData = await github.rest.repos.getContent({
             headers: {
@@ -129,9 +129,8 @@ async function extractFromPackageManager(github, baseSha, baseFileName, headSha,
     }
     catch (error) {
         core.debug(`Base file ${baseFileName} not found`);
-        return [];
     }
-    let headContent;
+    let headContent = null;
     try {
         const headContentData = await github.rest.repos.getContent({
             headers: {
@@ -150,6 +149,8 @@ async function extractFromPackageManager(github, baseSha, baseFileName, headSha,
     }
     catch (error) {
         core.debug(`Head file ${headFileName} not found`);
+    }
+    if (!baseContent || !headContent) {
         return [];
     }
     const previousDependencies = {};
