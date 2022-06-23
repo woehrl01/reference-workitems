@@ -202,12 +202,13 @@ async function replaceIssueNumbers(prTitle, issues) {
     return `${titleWithoutIssues} (${issueText})`;
 }
 async function extractFromGitHub(github, repo, baseSha, headSha) {
-    const match = /(github\.com:){0,1}([^:]*)\/([^.]*)(.git){0,1}$/.exec(repo);
-    if (!match) {
+    const match = /(github\.com:){0,1}(?<owner>[^:]*)\/(?<repo>[^.]*)(.git){0,1}$/.exec(repo);
+    if (!match || !match.groups) {
         core.debug(`Invalid repo ${repo}`);
         return [];
     }
-    const [, ownerName, repoName,] = match;
+    const ownerName = match.groups.owner;
+    const repoName = match.groups.repo;
     core.debug(`Owner: ${ownerName}`);
     core.debug(`Repo: ${repoName}`);
     core.debug(`Base sha: ${baseSha}`);
