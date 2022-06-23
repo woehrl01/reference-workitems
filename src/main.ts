@@ -1,7 +1,6 @@
 import * as core from '@actions/core'
 import { context, getOctokit } from '@actions/github'
 import { GitHub } from '@actions/github/lib/utils'
-import { captureRejections } from 'events'
 
 const regexMatchIssue = /(AB#[0-9]+)/g
 

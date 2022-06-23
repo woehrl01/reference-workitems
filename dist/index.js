@@ -97,14 +97,10 @@ async function extractAllDependencyIssues(github) {
         pull_number: github_1.context.payload.pull_request.number
     });
     for (const file of files.data) {
-        if (!file.filename.endsWith('.json')) {
+        if (!file.filename.endsWith('.lock')) {
             continue;
         }
         core.debug(`Found file ${file.filename} changed in PR`);
-        const headUrl = file.raw_url;
-        const baseUrl = file.raw_url.replace(head, base);
-        core.debug(`File content of PR: ${headUrl}`);
-        core.debug(`File content of base: ${baseUrl}`);
     }
     for (const issue of await extractFromPackageManager(github, '8fad6c5f92239947bcee8224ec8fcd4cc62e5e13', 'testcases/prev-composer.lock', '8fad6c5f92239947bcee8224ec8fcd4cc62e5e13', 'testcases/after-composer.lock')) {
         core.debug(`Found issue ${issue} in dependency`);
@@ -112,6 +108,8 @@ async function extractAllDependencyIssues(github) {
     return [];
 }
 async function extractFromPackageManager(github, baseSha, baseFileName, headSha, headFileName) {
+    core.debug(`Base sha: ${baseSha}`);
+    core.debug(`Head sha: ${headSha}`);
     const baseContentData = await github.rest.repos.getContent({
         owner: github_1.context.repo.owner,
         repo: github_1.context.repo.repo,
