@@ -89,7 +89,7 @@ async function extractAllDependencyIssues(github: InstanceType<typeof GitHub>): 
     core.debug(`Found file ${file.filename} changed in PR`)
   }
 
-  for (const issue of await extractFromPackageManager(github, head, './__tests__/testcases/prev-composer.lock', head, '__tests__/testcases/after-composer.lock')) {
+  for (const issue of await extractFromPackageManager(github, head, '__tests__/testcases/prev-composer.lock', head, '__tests__/testcases/after-composer.lock')) {
     core.debug(`Found issue ${issue} in dependency`)
   }
 
@@ -126,12 +126,12 @@ async function extractFromPackageManager(github: InstanceType<typeof GitHub>, ba
       ref: baseSha
     })
 
-    if (!baseContentData.data || !('content' in baseContentData.data)) {
+    if (!baseContentData.data) {
       core.debug(`No content found for ${baseFileName}`)
       return []
     }
 
-    baseContent = JSON.parse(baseContentData.data.content || '') as ComposerLock
+    baseContent = JSON.parse(baseContentData.data.toString()) as ComposerLock
   } catch (error) {
     core.debug(`Base file ${baseFileName} not found. Error: ${error}`)
   }
@@ -149,12 +149,12 @@ async function extractFromPackageManager(github: InstanceType<typeof GitHub>, ba
       ref: headSha
     })
 
-    if (!headContentData.data || !('content' in headContentData.data)) {
+    if (!headContentData.data) {
       core.debug(`No content found for ${headFileName}`)
       return []
     }
 
-    headContent = JSON.parse(headContentData.data.content || '') as ComposerLock
+    headContent = JSON.parse(headContentData.data.toString()) as ComposerLock
   } catch (error) {
     core.debug(`Head file ${headFileName} not found. Error: ${error}`)
   }

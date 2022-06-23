@@ -102,7 +102,7 @@ async function extractAllDependencyIssues(github) {
         }
         core.debug(`Found file ${file.filename} changed in PR`);
     }
-    for (const issue of await extractFromPackageManager(github, head, './__tests__/testcases/prev-composer.lock', head, '__tests__/testcases/after-composer.lock')) {
+    for (const issue of await extractFromPackageManager(github, head, '__tests__/testcases/prev-composer.lock', head, '__tests__/testcases/after-composer.lock')) {
         core.debug(`Found issue ${issue} in dependency`);
     }
     return [];
@@ -121,11 +121,11 @@ async function extractFromPackageManager(github, baseSha, baseFileName, headSha,
             path: baseFileName,
             ref: baseSha
         });
-        if (!baseContentData.data || !('content' in baseContentData.data)) {
+        if (!baseContentData.data) {
             core.debug(`No content found for ${baseFileName}`);
             return [];
         }
-        baseContent = JSON.parse(baseContentData.data.content || '');
+        baseContent = JSON.parse(baseContentData.data.toString());
     }
     catch (error) {
         core.debug(`Base file ${baseFileName} not found. Error: ${error}`);
@@ -141,11 +141,11 @@ async function extractFromPackageManager(github, baseSha, baseFileName, headSha,
             path: headFileName,
             ref: headSha
         });
-        if (!headContentData.data || !('content' in headContentData.data)) {
+        if (!headContentData.data) {
             core.debug(`No content found for ${headFileName}`);
             return [];
         }
-        headContent = JSON.parse(headContentData.data.content || '');
+        headContent = JSON.parse(headContentData.data.toString());
     }
     catch (error) {
         core.debug(`Head file ${headFileName} not found. Error: ${error}`);
