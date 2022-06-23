@@ -23,4 +23,4 @@ jobs:
       - uses: ./
         with:
           issue-regex-match: '(AB#[0-9]+)'
-          composer-lock-glob: '*composer.lock'
+          composer-lock-glob: '/**/*composer.lock'
