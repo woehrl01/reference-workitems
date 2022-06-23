@@ -92,25 +92,57 @@ async function extractAllDependencyIssues(github: InstanceType<typeof GitHub>): 
     core.debug(`File content of PR: ${headUrl}`)
     core.debug(`File content of base: ${baseUrl}`)
 
-    extractFromPackageManager(headUrl, baseUrl)
+
   }
+
+  const headUrl = 'https://github.com/woehrl01/reference-workitems/raw/8fad6c5f92239947bcee8224ec8fcd4cc62e5e13/__tests__/testcases/after-composer.lock'
+  const baseUrl = 'https://github.com/woehrl01/reference-workitems/raw/8fad6c5f92239947bcee8224ec8fcd4cc62e5e13/__tests__/testcases/prev-composer.lock'
+
+  for (const issue of await extractFromPackageManager(github, headUrl, baseUrl)) {
+    core.debug(`Found issue ${issue} in dependency`)
+  }
+
 
   return []
 }
 
-async function extractFromPackageManager(baseFileUrl: string, headFileUrl: string): Promise<string[]> {
+async function extractFromPackageManager(github: InstanceType<typeof GitHub>, baseFileUrl: string, headFileUrl: string): Promise<string[]> {
 
   const baseFileRequest = await fetch(baseFileUrl)
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const baseContent = await baseFileRequest.json()
 
   const headFileRequest = await fetch(headFileUrl)
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const headContent = await headFileRequest.json()
 
-  //todo: implement this
+  const previousDependencies: { [key: string]: string } = {}
+  for (const dependency of baseContent.packages) {
+    if (dependency.source.type !== 'git') {
+      continue
+    }
 
+    previousDependencies[dependency.source.url] = dependency.source.reference
+  }
 
+  const newDependencies: { [key: string]: string } = {}
+  for (const dependency of headContent.packages) {
+    if (dependency.source.type !== 'git') {
+      continue
+    }
+
+    newDependencies[dependency.source.url] = dependency.source.reference
+  }
+
+  const changedDependencies = Object.keys(newDependencies).filter(key => previousDependencies[key] !== newDependencies[key])
+  const changedDependenciesIssues = []
+  for (const dependency of changedDependencies) {
+
+    const dependencyIssues = await extractFromGitHub(github, dependency, previousDependencies[dependency], newDependencies[dependency])
+    for (const issue of dependencyIssues) {
+      changedDependenciesIssues.push(issue)
+    }
+  }
+
+  return changedDependenciesIssues
 
   // 1. implement diff for package manager here which detectes the commit delta of the repo
 
@@ -119,8 +151,6 @@ async function extractFromPackageManager(baseFileUrl: string, headFileUrl: strin
   // 2. call github api to get the commits between the changes
 
   // 3. extract the issues from the commit messages
-
-  return []
 }
 
 async function readAllIssues(body: string): Promise<string[]> {
@@ -150,7 +180,30 @@ async function replaceIssueNumbers(
 }
 
 
+async function extractFromGitHub(github: InstanceType<typeof GitHub>, repo: string, baseSha: string, headSha: string): Promise<string[]> {
+  const commits = await github.rest.repos.compareCommits({
+    owner: repo.split('/')[0],
+    repo: repo.split('/')[1],
+    base: baseSha,
+    head: headSha
+  })
+
+  core.debug(`Found ${commits.data.commits.length} commits in repo ${repo}`)
+
+  const allCommitIssues = []
+  for (const commit of commits.data.commits) {
+    core.debug(`Found related commit ${commit.sha} in repo ${repo}`)
+
+    const commitMessage = commit.commit.message
+    const commitIssues = await readAllIssues(commitMessage || '')
+    for (const issue of commitIssues) {
+      allCommitIssues.push(issue)
+      core.debug(`Found issue ${issue} in related commit message from repo ${repo}`)
+    }
+  }
+
+  return allCommitIssues
+}
+
 
 run()
-
-
