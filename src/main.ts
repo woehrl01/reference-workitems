@@ -192,7 +192,15 @@ async function extractFromPackageManager(github: InstanceType<typeof GitHub>, ba
   const changedDependenciesIssues = []
   for (const dependency of changedDependencies) {
 
-    const dependencyIssues = await extractFromGitHub(github, dependency, previousDependencies[dependency], newDependencies[dependency])
+    const previousSha = previousDependencies[dependency]
+    const newSha = newDependencies[dependency]
+
+    if (!previousSha) {
+      core.debug(`No previous sha found for ${dependency}. Skip. Ignore new dependency`)
+      continue
+    }
+
+    const dependencyIssues = await extractFromGitHub(github, dependency, previousSha, newSha)
     for (const issue of dependencyIssues) {
       changedDependenciesIssues.push(issue)
     }

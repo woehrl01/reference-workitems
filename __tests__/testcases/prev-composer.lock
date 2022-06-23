@@ -7,12 +7,12 @@
     "content-hash": "xyz",
     "packages": [
         {
-            "name": "woehrl01/php-test-project",
+            "name": "woehrl01/reference-workitems",
             "version": "v0.0.1",
             "source": {
                 "type": "git",
-                "url": "git@github.com:woehrl01/php-test-project.git",
-                "reference": "44c7432de93b144e914f3dcd6195684a81935b05"
+                "url": "git@github.com:woehrl01/reference-workitems.git",
+                "reference": "585726398bfad30b3b5065f6438a11eba666fd15"
             }
         }
     ]
