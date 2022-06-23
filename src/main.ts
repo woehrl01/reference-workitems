@@ -1,7 +1,6 @@
 import * as core from '@actions/core'
 import { context, getOctokit } from '@actions/github'
 import { GitHub } from '@actions/github/lib/utils'
-import fetch from 'node-fetch'
 
 const regexMatchIssue = /(AB#[0-9]+)/g
 
@@ -92,14 +91,10 @@ async function extractAllDependencyIssues(github: InstanceType<typeof GitHub>): 
     const baseUrl = file.raw_url.replace(head, base)
     core.debug(`File content of PR: ${headUrl}`)
     core.debug(`File content of base: ${baseUrl}`)
-
-
   }
 
-  const headUrl = 'https://github.com/woehrl01/reference-workitems/raw/8fad6c5f92239947bcee8224ec8fcd4cc62e5e13/__tests__/testcases/after-composer.lock'
-  const baseUrl = 'https://github.com/woehrl01/reference-workitems/raw/8fad6c5f92239947bcee8224ec8fcd4cc62e5e13/__tests__/testcases/prev-composer.lock'
 
-  for (const issue of await extractFromPackageManager(github, headUrl, baseUrl)) {
+  for (const issue of await extractFromPackageManager(github, '8fad6c5f92239947bcee8224ec8fcd4cc62e5e13', 'testcases/prev-composer.lock', '8fad6c5f92239947bcee8224ec8fcd4cc62e5e13', 'testcases/after-composer.lock')) {
     core.debug(`Found issue ${issue} in dependency`)
   }
 
@@ -120,13 +115,36 @@ type ComposerLock = {
 
 
 
-async function extractFromPackageManager(github: InstanceType<typeof GitHub>, baseFileUrl: string, headFileUrl: string): Promise<string[]> {
+async function extractFromPackageManager(github: InstanceType<typeof GitHub>, baseSha: string, baseFileName: string, headSha: string, headFileName: string): Promise<string[]> {
 
-  const baseFileRequest = await fetch(baseFileUrl)
-  const baseContent = await baseFileRequest.json() as ComposerLock
 
-  const headFileRequest = await fetch(headFileUrl)
-  const headContent = await headFileRequest.json() as ComposerLock
+  const baseContentData = await github.rest.repos.getContent({
+    owner: context.repo.owner,
+    repo: context.repo.repo,
+    path: baseFileName,
+    ref: baseSha
+  })
+
+  if (!baseContentData.data || !('content' in baseContentData.data)) {
+    core.debug(`No content found for ${baseFileName}`)
+    return []
+  }
+
+  const headContentData = await github.rest.repos.getContent({
+    owner: context.repo.owner,
+    repo: context.repo.repo,
+    path: headFileName,
+    ref: headSha
+  })
+
+  if (!headContentData.data || !('content' in headContentData.data)) {
+    core.debug(`No content found for ${headFileName}`)
+    return []
+  }
+
+  const baseContent = JSON.parse(baseContentData.data.content || '') as ComposerLock
+
+  const headContent = JSON.parse(headContentData.data.content || '') as ComposerLock
 
   const previousDependencies: { [key: string]: string } = {}
   for (const dependency of baseContent.packages) {
@@ -137,6 +155,8 @@ async function extractFromPackageManager(github: InstanceType<typeof GitHub>, ba
     previousDependencies[dependency.source.url] = dependency.source.reference
   }
 
+  core.debug(`Previous dependencies: ${JSON.stringify(previousDependencies)}`)
+
   const newDependencies: { [key: string]: string } = {}
   for (const dependency of headContent.packages) {
     if (dependency.source.type !== 'git') {
@@ -146,7 +166,12 @@ async function extractFromPackageManager(github: InstanceType<typeof GitHub>, ba
     newDependencies[dependency.source.url] = dependency.source.reference
   }
 
+  core.debug(`New dependencies: ${JSON.stringify(newDependencies)}`)
+
   const changedDependencies = Object.keys(newDependencies).filter(key => previousDependencies[key] !== newDependencies[key])
+
+  core.debug(`Changed dependencies: ${JSON.stringify(changedDependencies)}`)
+
   const changedDependenciesIssues = []
   for (const dependency of changedDependencies) {
 
@@ -155,6 +180,8 @@ async function extractFromPackageManager(github: InstanceType<typeof GitHub>, ba
       changedDependenciesIssues.push(issue)
     }
   }
+
+
 
   return changedDependenciesIssues
 
