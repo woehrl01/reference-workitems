@@ -82,11 +82,43 @@ async function extractAllDependencyIssues(github: InstanceType<typeof GitHub>): 
   })
 
   for (const file of files.data) {
+    if (!file.filename.endsWith('.json')) {
+      continue
+    }
+
     core.debug(`Found file ${file.filename} changed in PR`)
-    core.debug(`File content of PR: ${file.raw_url}`)
-    core.debug(`File content of base: ${file.raw_url.replace(head, base)}`) //todo: replace is not really good
+    const headUrl = file.raw_url
+    const baseUrl = file.raw_url.replace(head, base)
+    core.debug(`File content of PR: ${headUrl}`)
+    core.debug(`File content of base: ${baseUrl}`)
+
+    extractFromPackageManager(headUrl, baseUrl)
   }
 
+  return []
+}
+
+async function extractFromPackageManager(baseFileUrl: string, headFileUrl: string): Promise<string[]> {
+
+  const baseFileRequest = await fetch(baseFileUrl)
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const baseContent = await baseFileRequest.json()
+
+  const headFileRequest = await fetch(headFileUrl)
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const headContent = await headFileRequest.json()
+
+  //todo: implement this
+
+
+
+  // 1. implement diff for package manager here which detectes the commit delta of the repo
+
+  // 1.1 for each diff:
+
+  // 2. call github api to get the commits between the changes
+
+  // 3. extract the issues from the commit messages
 
   return []
 }
@@ -110,7 +142,7 @@ async function replaceIssueNumbers(
     return prTitle
   }
 
-  const titleWithoutIssues = prTitle.replace(/\(\)/, '') //todo: fix this replacement
+  const titleWithoutIssues = prTitle.replace(/ \([^)]*?\)$/, '')
 
   const issueText = [...new Set(issues)].map(issue => `${issue}`).join(', ')
 
