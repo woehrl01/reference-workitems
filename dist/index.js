@@ -115,7 +115,7 @@ async function extractAllDependencyIssues(github, composerMatch) {
         if (!(0, minimatch_1.default)(file.filename, composerMatch, { matchBase: false })) {
             continue;
         }
-        core.debug(`Found file ${file.filename} changed in PR`);
+        core.debug(`Found file ${file.filename} changed in PR matching glob ${composerMatch} for composer`);
     }
     const hardCoded = await extractFromPackageManager(github, head, '__tests__/testcases/prev-composer.lock', head, '__tests__/testcases/after-composer.lock');
     for (const issue of hardCoded) {

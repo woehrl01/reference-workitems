@@ -12,7 +12,7 @@ inputs:
     required: false
   composer-lock-glob:
     description: The glob used to find composer.lock files
-    default: ''
+    default: 'composer.lock'
     required: false
 runs:
   using: 'node16'
