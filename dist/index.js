@@ -45,6 +45,7 @@ async function run() {
         const token = core.getInput('github-token');
         const issueRegexMatch = core.getInput('issue-regex-match');
         const composerMatch = core.getInput('composer-lock-glob');
+        const failIfNoIssues = core.getInput('fail-if-no-issues') === 'true';
         regexMatchIssue = new RegExp(issueRegexMatch, 'g');
         const github = (0, github_1.getOctokit)(token);
         const bodyIssues = await extractAllIssuesFromBody();
@@ -60,6 +61,9 @@ async function run() {
                 pull_number: github_1.context.payload.pull_request.number,
                 title: newTitle,
             });
+        }
+        if (failIfNoIssues && !allIssues.length) {
+            core.setFailed('No linked issues found');
         }
     }
     catch (error) {

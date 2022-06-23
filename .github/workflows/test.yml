@@ -24,3 +24,4 @@ jobs:
         with:
           issue-regex-match: '(AB#[0-9]+)'
           composer-lock-glob: '**/composer.lock'
+          fail-if-no-issues: 'false'

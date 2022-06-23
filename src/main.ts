@@ -14,6 +14,7 @@ async function run(): Promise<void> {
     const token: string = core.getInput('github-token')
     const issueRegexMatch: string = core.getInput('issue-regex-match')
     const composerMatch: string = core.getInput('composer-lock-glob')
+    const failIfNoIssues: boolean = core.getInput('fail-if-no-issues') === 'true'
 
     regexMatchIssue = new RegExp(issueRegexMatch, 'g')
 
@@ -35,6 +36,10 @@ async function run(): Promise<void> {
         pull_number: context.payload.pull_request.number,
         title: newTitle,
       })
+    }
+
+    if (failIfNoIssues && !allIssues.length) {
+      core.setFailed('No linked issues found')
     }
 
   } catch (error) {
@@ -109,8 +114,6 @@ async function extractAllDependencyIssues(github: InstanceType<typeof GitHub>, c
       allDependencIssues.push(issue)
     }
   }
-
-
 
   return allDependencIssues
 }
