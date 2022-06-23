@@ -198,17 +198,7 @@ async function extractFromPackageManager(github: InstanceType<typeof GitHub>, ba
     }
   }
 
-
-
   return changedDependenciesIssues
-
-  // 1. implement diff for package manager here which detectes the commit delta of the repo
-
-  // 1.1 for each diff:
-
-  // 2. call github api to get the commits between the changes
-
-  // 3. extract the issues from the commit messages
 }
 
 async function readAllIssues(body: string): Promise<string[]> {
@@ -239,25 +229,40 @@ async function replaceIssueNumbers(
 
 
 async function extractFromGitHub(github: InstanceType<typeof GitHub>, repo: string, baseSha: string, headSha: string): Promise<string[]> {
-  const commits = await github.rest.repos.compareCommits({
-    owner: repo.split('/')[0],
-    repo: repo.split('/')[1],
-    base: baseSha,
-    head: headSha
-  })
 
-  core.debug(`Found ${commits.data.commits.length} commits in repo ${repo}`)
+  const [ownerName, repoName] = repo.split('/', 2)
+
+  core.debug(`Owner: ${ownerName}`)
+  core.debug(`Repo: ${repoName}`)
+  core.debug(`Base sha: ${baseSha}`)
+  core.debug(`Head sha: ${headSha}`)
 
   const allCommitIssues = []
-  for (const commit of commits.data.commits) {
-    core.debug(`Found related commit ${commit.sha} in repo ${repo}`)
 
-    const commitMessage = commit.commit.message
-    const commitIssues = await readAllIssues(commitMessage || '')
-    for (const issue of commitIssues) {
-      allCommitIssues.push(issue)
-      core.debug(`Found issue ${issue} in related commit message from repo ${repo}`)
+  try {
+    const commits = await github.rest.repos.compareCommits({
+      owner: ownerName,
+      repo: repoName,
+      base: baseSha,
+      head: headSha
+    })
+
+    core.debug(`Found ${commits.data.commits.length} commits in repo ${repo}`)
+
+
+    for (const commit of commits.data.commits) {
+      core.debug(`Found related commit ${commit.sha} in repo ${repo}`)
+
+      const commitMessage = commit.commit.message
+      const commitIssues = await readAllIssues(commitMessage || '')
+      for (const issue of commitIssues) {
+        allCommitIssues.push(issue)
+        core.debug(`Found issue ${issue} in related commit message from repo ${repo}`)
+      }
     }
+  } catch (error) {
+    core.debug(`error: ${error}`)
+    throw error
   }
 
   return allCommitIssues
