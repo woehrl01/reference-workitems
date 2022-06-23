@@ -1,6 +1,7 @@
 import * as core from '@actions/core'
 import { context, getOctokit } from '@actions/github'
 import { GitHub } from '@actions/github/lib/utils'
+import { captureRejections } from 'events'
 
 const regexMatchIssue = /(AB#[0-9]+)/g
 
@@ -82,17 +83,12 @@ async function extractAllDependencyIssues(github: InstanceType<typeof GitHub>): 
   })
 
   for (const file of files.data) {
-    if (!file.filename.endsWith('.json')) {
+    if (!file.filename.endsWith('.lock')) {
       continue
     }
 
     core.debug(`Found file ${file.filename} changed in PR`)
-    const headUrl = file.raw_url
-    const baseUrl = file.raw_url.replace(head, base)
-    core.debug(`File content of PR: ${headUrl}`)
-    core.debug(`File content of base: ${baseUrl}`)
   }
-
 
   for (const issue of await extractFromPackageManager(github, '8fad6c5f92239947bcee8224ec8fcd4cc62e5e13', 'testcases/prev-composer.lock', '8fad6c5f92239947bcee8224ec8fcd4cc62e5e13', 'testcases/after-composer.lock')) {
     core.debug(`Found issue ${issue} in dependency`)
@@ -116,7 +112,8 @@ type ComposerLock = {
 
 
 async function extractFromPackageManager(github: InstanceType<typeof GitHub>, baseSha: string, baseFileName: string, headSha: string, headFileName: string): Promise<string[]> {
-
+  core.debug(`Base sha: ${baseSha}`)
+  core.debug(`Head sha: ${headSha}`)
 
   const baseContentData = await github.rest.repos.getContent({
     owner: context.repo.owner,
