@@ -89,7 +89,7 @@ async function extractAllDependencyIssues(github: InstanceType<typeof GitHub>): 
     core.debug(`Found file ${file.filename} changed in PR`)
   }
 
-  for (const issue of await extractFromPackageManager(github, '8fad6c5f92239947bcee8224ec8fcd4cc62e5e13', 'testcases/prev-composer.lock', '8fad6c5f92239947bcee8224ec8fcd4cc62e5e13', 'testcases/after-composer.lock')) {
+  for (const issue of await extractFromPackageManager(github, '8fad6c5f92239947bcee8224ec8fcd4cc62e5e13', '__tests__/testcases/prev-composer.lock', '8fad6c5f92239947bcee8224ec8fcd4cc62e5e13', '__tests__/testcases/after-composer.lock')) {
     core.debug(`Found issue ${issue} in dependency`)
   }
 
@@ -114,33 +114,46 @@ async function extractFromPackageManager(github: InstanceType<typeof GitHub>, ba
   core.debug(`Base sha: ${baseSha}`)
   core.debug(`Head sha: ${headSha}`)
 
-  const baseContentData = await github.rest.repos.getContent({
-    owner: context.repo.owner,
-    repo: context.repo.repo,
-    path: baseFileName,
-    ref: baseSha
-  })
+  let baseContent: ComposerLock
+  try {
+    const baseContentData = await github.rest.repos.getContent({
+      owner: context.repo.owner,
+      repo: context.repo.repo,
+      path: baseFileName,
+      ref: baseSha
+    })
 
-  if (!baseContentData.data || !('content' in baseContentData.data)) {
-    core.debug(`No content found for ${baseFileName}`)
+    if (!baseContentData.data || !('content' in baseContentData.data)) {
+      core.debug(`No content found for ${baseFileName}`)
+      return []
+    }
+
+    baseContent = JSON.parse(baseContentData.data.content || '') as ComposerLock
+  } catch (error) {
+    core.debug(`Base file ${baseFileName} not found`)
     return []
   }
 
-  const headContentData = await github.rest.repos.getContent({
-    owner: context.repo.owner,
-    repo: context.repo.repo,
-    path: headFileName,
-    ref: headSha
-  })
 
-  if (!headContentData.data || !('content' in headContentData.data)) {
-    core.debug(`No content found for ${headFileName}`)
+  let headContent: ComposerLock
+  try {
+    const headContentData = await github.rest.repos.getContent({
+      owner: context.repo.owner,
+      repo: context.repo.repo,
+      path: headFileName,
+      ref: headSha
+    })
+
+    if (!headContentData.data || !('content' in headContentData.data)) {
+      core.debug(`No content found for ${headFileName}`)
+      return []
+    }
+
+    headContent = JSON.parse(headContentData.data.content || '') as ComposerLock
+  } catch (error) {
+    core.debug(`Head file ${headFileName} not found`)
     return []
   }
-
-  const baseContent = JSON.parse(baseContentData.data.content || '') as ComposerLock
-
-  const headContent = JSON.parse(headContentData.data.content || '') as ComposerLock
 
   const previousDependencies: { [key: string]: string } = {}
   for (const dependency of baseContent.packages) {

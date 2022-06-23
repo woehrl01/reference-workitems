@@ -102,7 +102,7 @@ async function extractAllDependencyIssues(github) {
         }
         core.debug(`Found file ${file.filename} changed in PR`);
     }
-    for (const issue of await extractFromPackageManager(github, '8fad6c5f92239947bcee8224ec8fcd4cc62e5e13', 'testcases/prev-composer.lock', '8fad6c5f92239947bcee8224ec8fcd4cc62e5e13', 'testcases/after-composer.lock')) {
+    for (const issue of await extractFromPackageManager(github, '8fad6c5f92239947bcee8224ec8fcd4cc62e5e13', '__tests__/testcases/prev-composer.lock', '8fad6c5f92239947bcee8224ec8fcd4cc62e5e13', '__tests__/testcases/after-composer.lock')) {
         core.debug(`Found issue ${issue} in dependency`);
     }
     return [];
@@ -110,28 +110,42 @@ async function extractAllDependencyIssues(github) {
 async function extractFromPackageManager(github, baseSha, baseFileName, headSha, headFileName) {
     core.debug(`Base sha: ${baseSha}`);
     core.debug(`Head sha: ${headSha}`);
-    const baseContentData = await github.rest.repos.getContent({
-        owner: github_1.context.repo.owner,
-        repo: github_1.context.repo.repo,
-        path: baseFileName,
-        ref: baseSha
-    });
-    if (!baseContentData.data || !('content' in baseContentData.data)) {
-        core.debug(`No content found for ${baseFileName}`);
+    let baseContent;
+    try {
+        const baseContentData = await github.rest.repos.getContent({
+            owner: github_1.context.repo.owner,
+            repo: github_1.context.repo.repo,
+            path: baseFileName,
+            ref: baseSha
+        });
+        if (!baseContentData.data || !('content' in baseContentData.data)) {
+            core.debug(`No content found for ${baseFileName}`);
+            return [];
+        }
+        baseContent = JSON.parse(baseContentData.data.content || '');
+    }
+    catch (error) {
+        core.debug(`Base file ${baseFileName} not found`);
         return [];
     }
-    const headContentData = await github.rest.repos.getContent({
-        owner: github_1.context.repo.owner,
-        repo: github_1.context.repo.repo,
-        path: headFileName,
-        ref: headSha
-    });
-    if (!headContentData.data || !('content' in headContentData.data)) {
-        core.debug(`No content found for ${headFileName}`);
+    let headContent;
+    try {
+        const headContentData = await github.rest.repos.getContent({
+            owner: github_1.context.repo.owner,
+            repo: github_1.context.repo.repo,
+            path: headFileName,
+            ref: headSha
+        });
+        if (!headContentData.data || !('content' in headContentData.data)) {
+            core.debug(`No content found for ${headFileName}`);
+            return [];
+        }
+        headContent = JSON.parse(headContentData.data.content || '');
+    }
+    catch (error) {
+        core.debug(`Head file ${headFileName} not found`);
         return [];
     }
-    const baseContent = JSON.parse(baseContentData.data.content || '');
-    const headContent = JSON.parse(headContentData.data.content || '');
     const previousDependencies = {};
     for (const dependency of baseContent.packages) {
         if (dependency.source.type !== 'git') {
