@@ -1,6 +1,7 @@
 import * as core from '@actions/core'
 import { context, getOctokit } from '@actions/github'
 import { GitHub } from '@actions/github/lib/utils'
+import fetch from 'node-fetch'
 
 const regexMatchIssue = /(AB#[0-9]+)/g
 
@@ -106,13 +107,26 @@ async function extractAllDependencyIssues(github: InstanceType<typeof GitHub>): 
   return []
 }
 
+type ComposerLock = {
+  packages: {
+    name: string,
+    source: {
+      type: string,
+      url: string,
+      reference: string
+    }
+  }[]
+}
+
+
+
 async function extractFromPackageManager(github: InstanceType<typeof GitHub>, baseFileUrl: string, headFileUrl: string): Promise<string[]> {
 
   const baseFileRequest = await fetch(baseFileUrl)
-  const baseContent = await baseFileRequest.json()
+  const baseContent = await baseFileRequest.json() as ComposerLock
 
   const headFileRequest = await fetch(headFileUrl)
-  const headContent = await headFileRequest.json()
+  const headContent = await headFileRequest.json() as ComposerLock
 
   const previousDependencies: { [key: string]: string } = {}
   for (const dependency of baseContent.packages) {
