@@ -113,6 +113,9 @@ async function extractFromPackageManager(github, baseSha, baseFileName, headSha,
     let baseContent;
     try {
         const baseContentData = await github.rest.repos.getContent({
+            headers: {
+                Accept: 'application/vnd.github.v3.raw'
+            },
             owner: github_1.context.repo.owner,
             repo: github_1.context.repo.repo,
             path: baseFileName,
@@ -131,6 +134,9 @@ async function extractFromPackageManager(github, baseSha, baseFileName, headSha,
     let headContent;
     try {
         const headContentData = await github.rest.repos.getContent({
+            headers: {
+                Accept: 'application/vnd.github.v3.raw'
+            },
             owner: github_1.context.repo.owner,
             repo: github_1.context.repo.repo,
             path: headFileName,

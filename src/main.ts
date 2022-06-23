@@ -117,6 +117,9 @@ async function extractFromPackageManager(github: InstanceType<typeof GitHub>, ba
   let baseContent: ComposerLock
   try {
     const baseContentData = await github.rest.repos.getContent({
+      headers: {
+        Accept: 'application/vnd.github.v3.raw'
+      },
       owner: context.repo.owner,
       repo: context.repo.repo,
       path: baseFileName,
@@ -138,6 +141,9 @@ async function extractFromPackageManager(github: InstanceType<typeof GitHub>, ba
   let headContent: ComposerLock
   try {
     const headContentData = await github.rest.repos.getContent({
+      headers: {
+        Accept: 'application/vnd.github.v3.raw'
+      },
       owner: context.repo.owner,
       repo: context.repo.repo,
       path: headFileName,
