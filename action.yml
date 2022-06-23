@@ -14,6 +14,10 @@ inputs:
     description: The glob used to find composer.lock files
     default: 'composer.lock'
     required: false
+  fail-if-no-issues:
+    description: Whether to fail if the issue number is not found
+    default: 'false'
+    required: false
 runs:
   using: 'node16'
   main: 'dist/index.js'
