@@ -1,8 +1,9 @@
 import * as core from '@actions/core'
 import { context, getOctokit } from '@actions/github'
 import { GitHub } from '@actions/github/lib/utils'
+import minimatch from 'minimatch'
 
-const regexMatchIssue = /(AB#[0-9]+)/g
+let regexMatchIssue: RegExp
 
 async function run(): Promise<void> {
   try {
@@ -11,11 +12,16 @@ async function run(): Promise<void> {
     }
 
     const token: string = core.getInput('github-token')
+    const issueRegexMatch: string = core.getInput('issue-regex-match')
+    const composerMatch: string = core.getInput('composer-lock-glob')
+
+    regexMatchIssue = new RegExp(issueRegexMatch, 'g')
+
     const github = getOctokit(token)
 
     const bodyIssues = await extractAllIssuesFromBody()
     const allCommmitIssues = await extractAllIssuesFromCommits(github)
-    const allDependencIssues = await extractAllDependencyIssues(github)
+    const allDependencIssues = await extractAllDependencyIssues(github, composerMatch)
 
     const allIssues = [...bodyIssues, ...allCommmitIssues, ...allDependencIssues]
 
@@ -72,7 +78,7 @@ async function extractAllIssuesFromBody(): Promise<string[]> {
   return bodyIssues
 }
 
-async function extractAllDependencyIssues(github: InstanceType<typeof GitHub>): Promise<string[]> {
+async function extractAllDependencyIssues(github: InstanceType<typeof GitHub>, composerMatch: string): Promise<string[]> {
   if (!context.payload.pull_request) {
     return []
   }
@@ -91,7 +97,7 @@ async function extractAllDependencyIssues(github: InstanceType<typeof GitHub>): 
 
   const allDependencIssues = []
   for (const file of files.data) {
-    if (!file.filename.endsWith('.lock')) {
+    if (!minimatch(file.filename, composerMatch, { matchBase: false })) {
       continue
     }
 

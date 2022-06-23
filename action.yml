@@ -6,6 +6,14 @@ inputs:
     description: The GitHub token used to create an authenticated client
     default: ${{ github.token }}
     required: false
+  issue-regex-match:
+    description: The regex used to match the issue number
+    default: '(#[0-9]+)'
+    required: false
+  composer-lock-glob:
+    description: The glob used to find composer.lock files
+    default: ''
+    required: false
 runs:
   using: 'node16'
   main: 'dist/index.js'
