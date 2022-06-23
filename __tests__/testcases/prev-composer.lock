@@ -1,0 +1,19 @@
+{
+    "_readme": [
+        "This file locks the dependencies of your project to a known state",
+        "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
+        "This file is @generated automatically"
+    ],
+    "content-hash": "xyz",
+    "packages": [
+        {
+            "name": "woehrl01/reference-workitems",
+            "version": "v0.0.1",
+            "source": {
+                "type": "git",
+                "url": "git@github.com:woehrl01/reference-workitems.git",
+                "reference": "585726398bfad30b3b5065f6438a11eba666fd15"
+            }
+        }
+    ]
+}

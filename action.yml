@@ -2,10 +2,18 @@ name: 'Your name here'
 description: 'Provide a description here'
 author: 'Your name or organization here'
 inputs:
-  milliseconds: # change this
-    required: true
-    description: 'input description here'
-    default: 'default value if applicable'
+  github-token:
+    description: The GitHub token used to create an authenticated client
+    default: ${{ github.token }}
+    required: false
+  issue-regex-match:
+    description: The regex used to match the issue number
+    default: '(#[0-9]+)'
+    required: false
+  composer-lock-glob:
+    description: The glob used to find composer.lock files
+    default: 'composer.lock'
+    required: false
 runs:
   using: 'node16'
   main: 'dist/index.js'

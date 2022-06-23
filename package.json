@@ -10,8 +10,8 @@
     "format-check": "prettier --check '**/*.ts'",
     "lint": "eslint src/**/*.ts",
     "package": "ncc build --source-map --license licenses.txt",
-    "test": "jest",
-    "all": "npm run build && npm run format && npm run lint && npm run package && npm test"
+    "test": "",
+    "all": "npm run build && npm run lint && npm run package && npm test"
   },
   "repository": {
     "type": "git",
@@ -24,10 +24,10 @@
   ],
   "author": "",
   "license": "MIT",
-  "dependencies": {
-    "@actions/core": "^1.9.0"
-  },
   "devDependencies": {
+    "@actions/core": "^1.9.0",
+    "@actions/github": "^5.0.3",
+    "@types/minimatch": "^3.0.5",
     "@types/node": "^16.10.5",
     "@typescript-eslint/parser": "^5.8.1",
     "@vercel/ncc": "^0.34.0",
@@ -39,5 +39,8 @@
     "prettier": "2.7",
     "ts-jest": "^28.0.5",
     "typescript": "4.7"
+  },
+  "dependencies": {
+    "minimatch": "^5.1.0"
   }
 }
