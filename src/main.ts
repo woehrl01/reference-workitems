@@ -102,14 +102,15 @@ async function extractAllDependencyIssues(github: InstanceType<typeof GitHub>, c
     }
 
     core.debug(`Found file ${file.filename} changed in PR matching glob ${composerMatch} for composer`)
+
+    const loadDependencies = await extractFromPackageManager(github, base, file.filename, head, file.filename)
+    for (const issue of loadDependencies) {
+      core.info(`Found issue ${issue} in dependency`)
+      allDependencIssues.push(issue)
+    }
   }
 
-  const hardCoded = await extractFromPackageManager(github, head, '__tests__/testcases/prev-composer.lock', head, '__tests__/testcases/after-composer.lock')
 
-  for (const issue of hardCoded) {
-    core.info(`Found issue ${issue} in dependency`)
-    allDependencIssues.push(issue)
-  }
 
   return allDependencIssues
 }
