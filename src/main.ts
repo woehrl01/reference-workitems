@@ -15,14 +15,22 @@ async function run(): Promise<void> {
 
     const bodyIssues = await extractAllIssuesFromBody()
     const allCommmitIssues = await extractAllIssuesFromCommits(github)
-
     const allDependencIssues = await extractAllDependencyIssues(github)
 
     const allIssues = [...bodyIssues, ...allCommmitIssues, ...allDependencIssues]
 
     const prTitle = context.payload.pull_request.title
     const newTitle = await replaceIssueNumbers(prTitle, allIssues)
-    core.debug(`New title: ${newTitle}`)
+
+    if (prTitle !== newTitle) {
+      core.debug(`New title: ${newTitle}`)
+      await github.rest.pulls.update({
+        ...context.repo,
+        pull_number: context.payload.pull_request.number,
+        title: newTitle,
+      })
+    }
+
   } catch (error) {
     if (error instanceof Error) core.setFailed(error.message)
   }
@@ -45,7 +53,7 @@ async function extractAllIssuesFromCommits(github: InstanceType<typeof GitHub>):
     const commitIssues = await readAllIssues(commitMessage || '')
     for (const issue of commitIssues) {
       allCommmitIssues.push(issue)
-      core.debug(`Found issue ${issue} in commit message`)
+      core.info(`Found issue ${issue} in commit message`)
     }
   }
   return allCommmitIssues
@@ -59,7 +67,7 @@ async function extractAllIssuesFromBody(): Promise<string[]> {
   const bodyIssues = await readAllIssues(context.payload.pull_request.body || '')
 
   for (const issue of bodyIssues) {
-    core.debug(`Found issue ${issue} in body`)
+    core.info(`Found issue ${issue} in body`)
   }
   return bodyIssues
 }
@@ -81,6 +89,7 @@ async function extractAllDependencyIssues(github: InstanceType<typeof GitHub>): 
     pull_number: context.payload.pull_request.number
   })
 
+  const allDependencIssues = []
   for (const file of files.data) {
     if (!file.filename.endsWith('.lock')) {
       continue
@@ -89,12 +98,14 @@ async function extractAllDependencyIssues(github: InstanceType<typeof GitHub>): 
     core.debug(`Found file ${file.filename} changed in PR`)
   }
 
-  for (const issue of await extractFromPackageManager(github, head, '__tests__/testcases/prev-composer.lock', head, '__tests__/testcases/after-composer.lock')) {
-    core.debug(`Found issue ${issue} in dependency`)
+  const hardCoded = await extractFromPackageManager(github, head, '__tests__/testcases/prev-composer.lock', head, '__tests__/testcases/after-composer.lock')
+
+  for (const issue of hardCoded) {
+    core.info(`Found issue ${issue} in dependency`)
+    allDependencIssues.push(issue)
   }
 
-
-  return []
+  return allDependencIssues
 }
 
 type ComposerLock = {
@@ -107,8 +118,6 @@ type ComposerLock = {
     }
   }[]
 }
-
-
 
 async function extractFromPackageManager(github: InstanceType<typeof GitHub>, baseSha: string, baseFileName: string, headSha: string, headFileName: string): Promise<string[]> {
   core.debug(`Base sha: ${baseSha} and file name: ${baseFileName}`)
@@ -229,12 +238,10 @@ async function replaceIssueNumbers(
   }
 
   const titleWithoutIssues = prTitle.replace(/ \([^)]*?\)$/, '')
-
   const issueText = [...new Set(issues)].map(issue => `${issue}`).join(', ')
 
   return `${titleWithoutIssues} (${issueText})`
 }
-
 
 async function extractFromGitHub(github: InstanceType<typeof GitHub>, repo: string, baseSha: string, headSha: string): Promise<string[]> {
 
@@ -263,7 +270,6 @@ async function extractFromGitHub(github: InstanceType<typeof GitHub>, repo: stri
     })
 
     core.debug(`Found ${commits.data.commits.length} commits in repo ${repo}`)
-
 
     for (const commit of commits.data.commits) {
       core.debug(`Found related commit ${commit.sha} in repo ${repo}`)

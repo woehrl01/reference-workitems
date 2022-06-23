@@ -46,7 +46,14 @@ async function run() {
         const allIssues = [...bodyIssues, ...allCommmitIssues, ...allDependencIssues];
         const prTitle = github_1.context.payload.pull_request.title;
         const newTitle = await replaceIssueNumbers(prTitle, allIssues);
-        core.debug(`New title: ${newTitle}`);
+        if (prTitle !== newTitle) {
+            core.debug(`New title: ${newTitle}`);
+            await github.rest.pulls.update({
+                ...github_1.context.repo,
+                pull_number: github_1.context.payload.pull_request.number,
+                title: newTitle,
+            });
+        }
     }
     catch (error) {
         if (error instanceof Error)
@@ -68,7 +75,7 @@ async function extractAllIssuesFromCommits(github) {
         const commitIssues = await readAllIssues(commitMessage || '');
         for (const issue of commitIssues) {
             allCommmitIssues.push(issue);
-            core.debug(`Found issue ${issue} in commit message`);
+            core.info(`Found issue ${issue} in commit message`);
         }
     }
     return allCommmitIssues;
@@ -79,7 +86,7 @@ async function extractAllIssuesFromBody() {
     }
     const bodyIssues = await readAllIssues(github_1.context.payload.pull_request.body || '');
     for (const issue of bodyIssues) {
-        core.debug(`Found issue ${issue} in body`);
+        core.info(`Found issue ${issue} in body`);
     }
     return bodyIssues;
 }
@@ -96,16 +103,19 @@ async function extractAllDependencyIssues(github) {
         repo: github_1.context.repo.repo,
         pull_number: github_1.context.payload.pull_request.number
     });
+    const allDependencIssues = [];
     for (const file of files.data) {
         if (!file.filename.endsWith('.lock')) {
             continue;
         }
         core.debug(`Found file ${file.filename} changed in PR`);
     }
-    for (const issue of await extractFromPackageManager(github, head, '__tests__/testcases/prev-composer.lock', head, '__tests__/testcases/after-composer.lock')) {
-        core.debug(`Found issue ${issue} in dependency`);
+    const hardCoded = await extractFromPackageManager(github, head, '__tests__/testcases/prev-composer.lock', head, '__tests__/testcases/after-composer.lock');
+    for (const issue of hardCoded) {
+        core.info(`Found issue ${issue} in dependency`);
+        allDependencIssues.push(issue);
     }
-    return [];
+    return allDependencIssues;
 }
 async function extractFromPackageManager(github, baseSha, baseFileName, headSha, headFileName) {
     core.debug(`Base sha: ${baseSha} and file name: ${baseFileName}`);
