@@ -128,7 +128,7 @@ async function extractFromPackageManager(github, baseSha, baseFileName, headSha,
         baseContent = JSON.parse(baseContentData.data.content || '');
     }
     catch (error) {
-        core.debug(`Base file ${baseFileName} not found`);
+        core.debug(`Base file ${baseFileName} not found. Error: ${error}`);
     }
     let headContent = null;
     try {
@@ -148,7 +148,7 @@ async function extractFromPackageManager(github, baseSha, baseFileName, headSha,
         headContent = JSON.parse(headContentData.data.content || '');
     }
     catch (error) {
-        core.debug(`Head file ${headFileName} not found`);
+        core.debug(`Head file ${headFileName} not found. Error: ${error}`);
     }
     if (!baseContent || !headContent) {
         return [];

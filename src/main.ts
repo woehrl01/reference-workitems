@@ -133,7 +133,7 @@ async function extractFromPackageManager(github: InstanceType<typeof GitHub>, ba
 
     baseContent = JSON.parse(baseContentData.data.content || '') as ComposerLock
   } catch (error) {
-    core.debug(`Base file ${baseFileName} not found`)
+    core.debug(`Base file ${baseFileName} not found. Error: ${error}`)
   }
 
 
@@ -156,7 +156,7 @@ async function extractFromPackageManager(github: InstanceType<typeof GitHub>, ba
 
     headContent = JSON.parse(headContentData.data.content || '') as ComposerLock
   } catch (error) {
-    core.debug(`Head file ${headFileName} not found`)
+    core.debug(`Head file ${headFileName} not found. Error: ${error}`)
   }
 
   if (!baseContent || !headContent) {
