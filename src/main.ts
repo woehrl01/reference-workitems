@@ -255,7 +255,7 @@ async function replaceIssueNumbers(
 
 async function extractFromGitHub(github: InstanceType<typeof GitHub>, repo: string, baseSha: string, headSha: string): Promise<string[]> {
 
-  const match = /(github\.com:){0,1}(?<owner>[^:]*)\/(?<repo>[^.]*)(.git){0,1}$/.exec(repo)
+  const match = /^(git@github\.com:|https:\/\/github\.com\/)(?<owner>[^:]*)\/(?<repo>[^.]*)(.git){0,1}$/.exec(repo)
   if (!match || !match.groups) {
     core.debug(`Invalid repo ${repo}`)
     return []

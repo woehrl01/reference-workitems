@@ -223,7 +223,7 @@ async function replaceIssueNumbers(prTitle, issues) {
     return `${titleWithoutIssues} (${issueText})`;
 }
 async function extractFromGitHub(github, repo, baseSha, headSha) {
-    const match = /(github\.com:){0,1}(?<owner>[^:]*)\/(?<repo>[^.]*)(.git){0,1}$/.exec(repo);
+    const match = /^(git@github\.com:|https:\/\/github\.com\/)(?<owner>[^:]*)\/(?<repo>[^.]*)(.git){0,1}$/.exec(repo);
     if (!match || !match.groups) {
         core.debug(`Invalid repo ${repo}`);
         return [];
