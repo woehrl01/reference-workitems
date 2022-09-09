@@ -38,7 +38,7 @@
     "js-yaml": "^4.1.0",
     "prettier": "2.7",
     "ts-jest": "^28.0.7",
-    "typescript": "4.7"
+    "typescript": "4.8"
   },
   "dependencies": {
     "minimatch": "^5.1.0"
